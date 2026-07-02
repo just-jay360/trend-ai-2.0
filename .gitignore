@@ -1,0 +1,40 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Model files (too large for git)
+*.pkl
+*.h5
+*.hdf5
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Add your files
+git add .
+
+# Commit (this will now work)
+git commit -m "Initial commit - Forex Predictor Project"
+
+# Push to GitHub
+git push -u origin main
+
+git config --global user.email "chizzyjames360@gmail.com"
+  git config --global user.name "just-jay360"
