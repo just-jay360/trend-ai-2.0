@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+this is my index.html code "<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -161,7 +161,7 @@
 
         <!-- Latest Signal -->
         <div class="signal-card" id="signalCard" style="display:none;">
-            <h3 style="color:#888; margin-bottom:0.5rem;">LATEST SIGNAL</h3>
+            <h3 style="color:#888; margin-bottom:0.5rem;">LIVE AI SIGNAL</h3>
             <div id="signalDisplay"></div>
             <p id="signalDetails" style="color:#666; margin-top:0.5rem;"></p>
         </div>
@@ -220,6 +220,7 @@
                         document.getElementById('statusBadge').className = 'status-badge status-complete';
                         document.getElementById('statusBadge').textContent = '🟢 Complete';
                         displayResults(data.results);
+                        showLogs(data.results.steps);
                     } else if (data.running) {
                         // Show progress logs if available
                         if (data.results && data.results.steps) {
@@ -239,19 +240,24 @@
         }
 
         function displayResults(results) {
-            // Show signal
-            if (results.latest_signal) {
-                document.getElementById('signalCard').style.display = 'block';
-                const sig = results.latest_signal;
-                const display = document.getElementById('signalDisplay');
-                let signalClass = 'signal-hold';
-                if (sig.prediction.includes('Buy')) signalClass = 'signal-buy';
-                else if (sig.prediction.includes('Sell')) signalClass = 'signal-sell';
-
+            // Show LIVE signal
+            if (results.live_prediction) {
+                document.getElementById("signalCard").style.display = "block";
+                const sig = results.live_prediction;
+                const display = document.getElementById("signalDisplay");
+                let signalClass = "signal-hold";
+                if (sig.signal === "BUY")
+                    signalClass = "signal-buy";
+                else if (sig.signal === "SELL")
+                    signalClass = "signal-sell";
                 display.className = signalClass;
-                display.textContent = sig.prediction;
-                document.getElementById('signalDetails').textContent =
-                    `Confidence: ${sig.confidence}% | ${sig.timestamp}`;
+                display.textContent = sig.signal;
+                document.getElementById("signalDetails").innerHTML =
+                    `
+                    <b>Price:</b> ${sig.price}<br>
+                    <b>Confidence:</b> ${sig.confidence}%<br>
+                    <b>Updated:</b> ${sig.time}
+                    `;
             }
 
             // Show metrics
@@ -279,10 +285,6 @@
                     <div class="metric-card">
                         <div class="metric-value">${bt.rf_accuracy}%</div>
                         <div class="metric-label">RF Accuracy</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${bt.lstm_accuracy}%</div>
-                        <div class="metric-label">LSTM Accuracy</div>
                     </div>
                 `;
 
@@ -322,6 +324,17 @@
             // Show logs
             if (results.steps) showLogs(results.steps);
         }
+        // Automatically refresh every 60 seconds
+// Auto-refresh every 60 seconds only when page is visible
+setInterval(async () => {
+    try {
+        if (document.visibilityState !== 'visible') return;
+        console.log('Auto-refreshing...');
+        await fetch('/api/run', { method: 'POST' });
+    } catch (err) {
+        console.error('Auto-refresh failed:', err);
+    }
+}, 60000);
     </script>
 </body>
-</html>
+</html>"

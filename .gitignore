@@ -8,10 +8,14 @@ venv/
 env/
 ENV/
 
-# Model files (too large for git)
+# Model files
 *.pkl
 *.h5
 *.hdf5
+
+# Keep these required deployment models
+!models/rf_model.pkl
+!models/scaler.pkl
 
 # IDE
 .vscode/

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Primordial Trend AI</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+
+background:#090d18;
+font-family:Segoe UI;
+color:white;
+overflow-x:hidden;
+
+}
+
+nav{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:25px 8%;
+
+}
+
+.logo{
+
+font-size:32px;
+font-weight:700;
+color:#00d4aa;
+
+}
+
+nav ul{
+
+display:flex;
+gap:40px;
+list-style:none;
+
+}
+
+nav a{
+
+color:white;
+text-decoration:none;
+transition:.3s;
+
+}
+
+nav a:hover{
+
+color:#00d4aa;
+
+}
+
+.hero{
+
+height:90vh;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 8%;
+
+}
+
+.hero-text{
+
+max-width:600px;
+
+}
+
+.hero-text h1{
+
+font-size:70px;
+font-weight:800;
+line-height:1.1;
+
+}
+
+.hero-text span{
+
+color:#00d4aa;
+
+}
+
+.hero-text p{
+
+margin-top:30px;
+font-size:20px;
+color:#bbbbbb;
+line-height:1.8;
+
+}
+
+.buttons{
+
+margin-top:40px;
+
+}
+
+.btn-main{
+
+background:#00d4aa;
+padding:18px 45px;
+border-radius:50px;
+text-decoration:none;
+font-weight:bold;
+color:black;
+margin-right:20px;
+transition:.3s;
+
+}
+
+.btn-main:hover{
+
+transform:translateY(-4px);
+
+}
+
+.btn-outline{
+
+border:2px solid #00d4aa;
+padding:18px 45px;
+border-radius:50px;
+text-decoration:none;
+color:#00d4aa;
+font-weight:bold;
+
+}
+
+.hero-card{
+
+width:420px;
+
+background:#13182a;
+
+border-radius:25px;
+
+padding:40px;
+
+box-shadow:0 0 40px rgba(0,212,170,.15);
+
+}
+
+.metric{
+
+display:flex;
+justify-content:space-between;
+margin:20px 0;
+
+font-size:18px;
+
+}
+
+.green{
+
+color:#00d4aa;
+
+}
+
+.red{
+
+color:#ff4757;
+
+}
+
+.section{
+
+padding:120px 8%;
+
+}
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+gap:30px;
+
+margin-top:60px;
+
+}
+
+.card{
+
+background:#141a2f;
+
+padding:40px;
+
+border-radius:20px;
+
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-8px);
+
+}
+
+.card h3{
+
+margin-bottom:20px;
+
+color:#00d4aa;
+
+}
+
+footer{
+
+padding:40px;
+
+text-align:center;
+
+color:#888;
+
+border-top:1px solid #222;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<nav>
+
+<div class="logo">
+Primordial Trend AI
+</div>
+
+<ul>
+
+<li><a href="#">Home</a></li>
+
+<li><a href="#features">Features</a></li>
+
+<li><a href="#about">About</a></li>
+
+<li><a href="/dashboard">Dashboard</a></li>
+
+</ul>
+
+</nav>
+
+<section class="hero">
+
+<div class="hero-text">
+
+<h1>
+
+AI Powered<br>
+
+<span>Forex Intelligence</span>
+
+</h1>
+
+<p>
+
+Analyze the market using Random Forest, LSTM Neural Networks and
+real-time AI decision making.
+
+Backtest strategies.
+
+Generate trading signals.
+
+Improve your win rate.
+
+</p>
+
+<div class="buttons">
+
+<a href="/dashboard" class="btn-main">
+
+🚀 Launch Dashboard
+
+</a>
+
+<a href="#features" class="btn-outline">
+
+Learn More
+
+</a>
+
+</div>
+
+</div>
+
+<div class="hero-card">
+
+<h3 style="margin-bottom:30px;">Today's Market</h3>
+
+<div class="metric">
+
+<span>EUR/USD</span>
+
+<span class="green">BUY</span>
+
+</div>
+
+<div class="metric">
+
+<span>Confidence</span>
+
+<span class="green">94%</span>
+
+</div>
+
+<div class="metric">
+
+<span>LSTM Accuracy</span>
+
+<span class="green">91%</span>
+
+</div>
+
+<div class="metric">
+
+<span>RF Accuracy</span>
+
+<span class="green">88%</span>
+
+</div>
+
+<div class="metric">
+
+<span>Risk</span>
+
+<span class="red">Medium</span>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="section" id="features">
+
+<center>
+
+<h1>Why Primordial Trend AI?</h1>
+
+</center>
+
+<div class="cards">
+
+<div class="card">
+
+<h3>AI Prediction</h3>
+
+<p>
+
+Machine learning models analyze thousands of candles to predict future price movement.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Backtesting</h3>
+
+<p>
+
+Evaluate your strategy against historical market data before risking capital.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Live Signals</h3>
+
+<p>
+
+Receive Buy, Sell and Hold signals with confidence scores.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Analytics Dashboard</h3>
+
+<p>
+
+Track equity curve, win rate, trade history and overall performance.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="section" id="about">
+
+<center>
+
+<h1>Built for Smart Traders</h1>
+
+<br>
+
+<p style="max-width:900px;color:#aaa;font-size:20px;line-height:1.8;">
+
+Primordial Trend AI combines deep learning, machine learning,
+technical analysis and backtesting into one professional platform.
+Designed for traders who want institutional-grade market analysis.
+
+</p>
+
+</center>
+
+</section>
+
+<footer>
+
+© 2026 Primordial Trend AI
+
+</footer>
+
+</body>
+
+</html>

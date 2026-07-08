@@ -7,13 +7,12 @@ Add LSTM support later with larger droplet
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import joblib
+import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import RobustScaler
-from sklearn.metrics import classification_report
 import ta
-import joblib
 import warnings
-import os
 warnings.filterwarnings('ignore')
 
 class ForexEngine:
@@ -33,20 +32,38 @@ class ForexEngine:
     def fetch_data(self):
         """Download and prepare OHLCV data"""
         try:
-            df = yf.download(self.symbol, period=self.period, interval="1h", progress=False)
-            
+            print(f"Downloading data for: {self.symbol}")
+
+            df = yf.download(
+                tickers=self.symbol,
+                period=self.period,
+                interval="1h",
+                auto_adjust=True,
+                progress=False,
+                threads=False
+            )
+
+            print(df.head())
+            print(f"Rows downloaded: {len(df)}")
+
             if df.empty:
                 raise ValueError("No data downloaded")
-                
+
+            # Flatten MultiIndex columns if present
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
-            
-            df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+
+            # Keep only the columns we need
+            df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
+
             df = df.dropna()
+
+            print("Final columns:", df.columns.tolist())
+
             return df
+
         except Exception as e:
             print(f"Data fetch error: {e}")
-            # Return minimal mock data as fallback
             return self._generate_fallback_data()
 
     def _generate_fallback_data(self):
@@ -55,7 +72,7 @@ class ForexEngine:
         np.random.seed(42)
         price = 1.0850
         data = []
-        for d in dates:
+        for _ in dates:
             change = np.random.normal(0, 0.0008)
             price += change
             data.append({
@@ -71,35 +88,85 @@ class ForexEngine:
     def engineer_features(self, df):
         """Create features and target variable"""
         df = df.copy()
-        
-        # Target
+
+        print("Initial rows:", len(df))
+
+        # Make sure numeric columns are numeric
+        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        print(df.dtypes)
+
+        # ---------------- Target ----------------
+
         df['Future_Close'] = df['Close'].shift(-self.predict_horizon)
         df['Price_Change'] = df['Future_Close'] - df['Close']
+
         df['Target'] = np.where(df['Price_Change'] > self.threshold, 1, 0)
         df['Target'] = np.where(df['Price_Change'] < -self.threshold, 0, df['Target'])
-        df.loc[(df['Price_Change'] >= -self.threshold) & (df['Price_Change'] <= self.threshold), 'Target'] = np.nan
-        df = df.dropna(subset=['Target'])
-        df['Target'] = df['Target'].astype(int)
-        df = df.drop(['Future_Close', 'Price_Change'], axis=1)
 
-        # Technical Indicators
+        df.loc[
+            (df['Price_Change'] >= -self.threshold) &
+            (df['Price_Change'] <= self.threshold),
+            'Target'
+        ] = np.nan
+
+        df = df.dropna(subset=['Target'])
+
+        print("After target:", len(df))
+
+        df['Target'] = df['Target'].astype(int)
+
+        df.drop(['Future_Close','Price_Change'], axis=1, inplace=True)
+
+        # ---------------- Indicators ----------------
+
         df['SMA_20'] = ta.trend.sma_indicator(df['Close'], window=20)
+        print("After SMA20:", df['SMA_20'].isna().sum())
+
         df['SMA_50'] = ta.trend.sma_indicator(df['Close'], window=50)
+
         df['EMA_20'] = ta.trend.ema_indicator(df['Close'], window=20)
+
         df['RSI'] = ta.momentum.rsi(df['Close'], window=14)
+
         df['MACD'] = ta.trend.macd_diff(df['Close'])
+
         df['BB_high'] = ta.volatility.bollinger_hband(df['Close'])
         df['BB_low'] = ta.volatility.bollinger_lband(df['Close'])
+
         df['BB_width'] = df['BB_high'] - df['BB_low']
-        df['ATR'] = ta.volatility.average_true_range(df['High'], df['Low'], df['Close'], window=14)
-        df['Stochastic'] = ta.momentum.stoch(df['High'], df['Low'], df['Close'])
-        df['Volume_SMA'] = df['Volume'].rolling(20).mean()
-        df['Volume_Ratio'] = df['Volume'] / df['Volume_SMA']
+
+        df['ATR'] = ta.volatility.average_true_range(
+            df['High'],
+            df['Low'],
+            df['Close'],
+            window=14
+        )
+
+        df['Stochastic'] = ta.momentum.stoch(
+            df['High'],
+            df['Low'],
+            df['Close']
+        )
+
+
         df['High_Low_Ratio'] = (df['High'] - df['Low']) / df['Close']
+
         df['Close_Open_Ratio'] = (df['Close'] - df['Open']) / df['Open']
-        df['Return_1'] = df['Close'].pct_change(1)
+
+        df['Return_1'] = df['Close'].pct_change()
+
         df['Return_5'] = df['Close'].pct_change(5)
+
+        print("Rows before final dropna:", len(df))
+
+        print(df.isna().sum())
+
         df = df.dropna()
+
+        print("Rows after final dropna:", len(df))
+
         return df
 
     def run_pipeline(self):
@@ -117,6 +184,7 @@ class ForexEngine:
 
             # Step 2: Feature engineering
             df = self.engineer_features(df)
+            print(f"Rows after feature engineering: {len(df)}")
             self.df = df
             self.feature_cols = [col for col in df.columns if col not in
                                 ['Open', 'High', 'Low', 'Close', 'Volume', 'Target']]
@@ -136,18 +204,53 @@ class ForexEngine:
             X_test = test_df[self.feature_cols].values
             y_test = test_df['Target'].values
 
+            print(f"Training samples: {len(train_df)}")
+            print(f"Testing samples: {len(test_df)}")
+
+            if len(train_df) == 0 or len(test_df) == 0:
+                raise ValueError(
+                    f"Dataset split failed. Training={len(train_df)}, Testing={len(test_df)}"
+                )
+
             # Scale
+            print("Starting scaling...")
+
             self.scaler = RobustScaler()
+
             X_train_scaled = self.scaler.fit_transform(X_train)
+
+            print("Training data scaled.")
+
             X_test_scaled = self.scaler.transform(X_test)
 
+            print("Test data scaled.")
+
             # Step 4: Train Random Forest
+            print("Creating Random Forest model...")
+            
             self.model = RandomForestClassifier(
                 n_estimators=200, max_depth=10,
                 min_samples_split=20, random_state=42, n_jobs=-1
             )
+            
+            print("Training model...")
+
             self.model.fit(X_train_scaled, y_train)
+
+            print("Training complete.")
+            
+            os.makedirs("models", exist_ok=True)
+
+            joblib.dump(self.model, "models/rf_model.pkl")
+            joblib.dump(self.scaler, "models/scaler.pkl")
+
+            print("Random Forest model saved.")
+            
+            print("Calculating accuracy...")
+
             rf_acc = self.model.score(X_test_scaled, y_test)
+
+            print("Accuracy:", rf_acc)
             
             results['steps'].append({
                 'name': 'Random Forest Model',
@@ -164,8 +267,8 @@ class ForexEngine:
             backtest_df['Prediction'] = rf_pred
             backtest_df['Confidence'] = rf_prob
             backtest_df['Signal'] = np.where(
-                (backtest_df['Prediction'] == 1) & (backtest_df['Confidence'] > 0.65), 'Buy',
-                np.where((backtest_df['Prediction'] == 0) & (backtest_df['Confidence'] > 0.65), 'Sell', 'Hold')
+                (backtest_df['Prediction'] == 1) & (backtest_df['Confidence'] > 0.55), 'Buy',
+                np.where((backtest_df['Prediction'] == 0) & (backtest_df['Confidence'] > 0.55), 'Sell', 'Hold')
             )
 
             # Backtest simulation
@@ -240,7 +343,10 @@ class ForexEngine:
                 'win_rate': round(win_rate, 1),
                 'equity_curve': equity_curve,
                 'trades': trades,
-                'rf_accuracy': round(rf_acc * 100, 2)
+                'rf_accuracy': round(rf_acc * 100, 2),
+
+                # Phase 1 placeholder
+                'lstm_accuracy': "N/A"
             }
 
             # Latest signal
